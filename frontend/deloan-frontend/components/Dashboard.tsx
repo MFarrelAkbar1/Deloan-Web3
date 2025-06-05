@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
-import { DELOAN_ORACLE_ABI, DELOAN_CONTRACT_ADDRESS } from '../src/app/wagmi-oracle';
+import { DELOAN_ABI, DELOAN_CONTRACT_ADDRESS } from '../src/app/wagmi';
 import LoanForm from './LoanForm';
 import LendingPoolForm from './LendingPoolForm';
 
