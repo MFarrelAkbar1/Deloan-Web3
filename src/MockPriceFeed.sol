@@ -51,7 +51,7 @@ contract MockPriceFeed {
         updatedAt = block.timestamp;
     }
     
-    // Simulate price volatility
+    // Simulate price volatility for testing
     function simulateVolatility(int256 _changePercent) external {
         price = price + (price * _changePercent / 100);
         roundId++;

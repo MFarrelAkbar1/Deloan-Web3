@@ -1,11 +1,11 @@
 import Header from '../../components/Header';
-import OracleDashboard from '../../components/OracleDashboard';
+import Dashboard from '../../components/Dashboard';
 
 export default function Home() {
   return (
     <main className="min-h-screen">
       <Header />
-      <OracleDashboard />
+      <Dashboard />
     </main>
   );
 }
