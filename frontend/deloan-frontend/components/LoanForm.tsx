@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
-import { DELOAN_ABI, DELOAN_CONTRACT_ADDRESS } from '../app/wagmi';
+import { DELOAN_ABI, DELOAN_CONTRACT_ADDRESS } from '../src/app/wagmi';
 
 export default function LoanForm() {
   const [loanAmount, setLoanAmount] = useState('');
