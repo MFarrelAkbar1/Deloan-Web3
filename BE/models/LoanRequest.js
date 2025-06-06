@@ -4,6 +4,7 @@ const loanSchema = new mongoose.Schema({
   loanId: { type: String, required: true, unique: true },
   borrowerWallet: String,
   amount: Number,
+  remainingAmount: Number, // 💡 tambahkan ini
   reason: String,
   durationDays: Number,
   bankAccount: String,
@@ -13,5 +14,6 @@ const loanSchema = new mongoose.Schema({
     default: "pending",
   },
 });
+
 
 module.exports = mongoose.model("LoanRequest", loanSchema);
