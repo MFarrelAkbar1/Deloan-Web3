@@ -25,6 +25,29 @@ exports.approveLoan = async (req, res) => {
   }
 };
 
+exports.rejectLoan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const loan = await Loan.findById(id);
+
+    if (!loan) {
+      return res.status(404).json({ error: "Loan not found" });
+    }
+
+    if (loan.status !== "pending") {
+      return res.status(400).json({ error: "Only pending loans can be rejected" });
+    }
+
+    loan.status = "rejected";
+    await loan.save();
+
+    res.json({ message: "Loan rejected successfully", status: loan.status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 // Buat pinjaman baru, data dari on-chain listener
 exports.createLoan = async (req, res) => {
   try {
@@ -84,6 +107,22 @@ exports.payLoan = async (req, res) => {
       remainingAmount: loan.remainingAmount,
       status: loan.status,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteLoanByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const deletedLoan = await Loan.findOneAndDelete({ username });
+
+    if (!deletedLoan) {
+      return res.status(404).json({ error: "Loan not found for that username" });
+    }
+
+    res.json({ message: `Loan for ${username} deleted successfully` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -49,6 +49,23 @@ export default function BankDashboard() {
       alert("Error approving loan");
     }
   }
+  
+ async function rejectLoan(id: string) {
+    try {
+      const res = await fetch(`http://localhost:5000/loan/${id}/reject`, {
+        method: "PATCH",
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert("Error: " + (errorData.error || "Reject failed"));
+        return;
+      }
+      alert("Loan rejected!");
+      fetchLoans(); // refresh list
+    } catch (err) {
+      alert("Error rejecting loan");
+    }
+ }
 
   useEffect(() => {
     fetchLoans();
@@ -80,12 +97,15 @@ export default function BankDashboard() {
               <td>{loan.remainingAmount}</td>
               <td>{loan.status}</td>
               <td>
-                {loan.status === "pending" ? (
-                  <button onClick={() => approveLoan(loan._id)}>Approve</button>
-                ) : (
-                  "-"
-                )}
-              </td>
+              {loan.status === "pending" ? (
+              <>
+              <button onClick={() => approveLoan(loan._id)}>Approve</button>{" "}
+              <button onClick={() => rejectLoan(loan._id)}>Reject</button>
+              </>
+              ) : (
+              "-"
+              )}
+            </td>
             </tr>
           ))}
         </tbody>

@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: "http://localhost:3000",
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,  // jika perlu support cookies/auth
+  credentials: true,
 }));
 
 // Middleware untuk parsing JSON request body
