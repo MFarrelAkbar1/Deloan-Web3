@@ -1,12 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const loanController = require("../controllers/loanController");
 
-router.get("/", loanController.getAllLoans);
-router.post("/", loanController.createLoan);
-router.patch("/:id/approve", loanController.approveLoan);
-router.patch("/pay/:username", loanController.payLoan);
-router.delete("/:username", loanController.deleteLoanByUsername);
-router.patch("/:id/reject", loanController.rejectLoan);
+// Legacy routes untuk compatibility
+// Hanya endpoint dasar untuk menghindari error
+
+router.get("/", (req, res) => {
+  res.json({
+    message: "Legacy loan routes",
+    note: "Use /bank-loan/* for new bank approval system",
+    availableEndpoints: [
+      "GET /bank-loan/pending",
+      "POST /bank-loan/approve/:loanId", 
+      "GET /bank-loan/user/:username"
+    ]
+  });
+});
+
+router.get("/health", (req, res) => {
+  res.json({ status: "Legacy routes working" });
+});
 
 module.exports = router;

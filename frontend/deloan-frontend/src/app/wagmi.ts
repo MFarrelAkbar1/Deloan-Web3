@@ -158,6 +158,9 @@ export const MOCK_PRICE_FEED_ABI = [
   }
 ] as const;
 
+// frontend/deloan-frontend/src/app/wagmi.ts
+export const BANK_LOAN_CONTRACT_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}`;
+
 // Contract addresses - Use environment variables dengan fallback
 export const DELOAN_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_DELOAN_CONTRACT_ADDRESS || 
   '0x5FbDB2315678afecb367f032d93F642f64180aa3') as `0x${string}`;
