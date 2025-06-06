@@ -9,53 +9,50 @@ contract DeploySimpleScript is Script {
     DeLoanOracle public deloan;
     MockPriceFeed public ethPriceFeed;
 
-    function setUp() public {}
-
-    function run() public {
+    function run() external {
         vm.startBroadcast();
 
-        console.log("=== DEPLOYING DELOAN SIMPLE ==");
+        console.log("=== DEPLOYING DELOAN ORACLE ===");
 
-        // 1. Deploy Mock ETH Price Feed ($2000)
-        console.log("1. Deploying ETH Price Feed...");
+        // 1. Deploy mock price feed (ETH/USD) dengan decimals = 8
+        console.log("1️⃣ Deploying Mock ETH/USD Price Feed...");
         ethPriceFeed = new MockPriceFeed(
-            8, // decimals
+            8,
             "ETH/USD",
-            1, // version
-            200000000000 // $2000 * 10^8
+            1,
+            2000 * 10 ** 8  // $2000 → 2000 * 1e8
         );
-        console.log("   ETH Price Feed:", address(ethPriceFeed));
+        console.log("   → Price Feed @", address(ethPriceFeed));
 
-        // 2. Deploy DeLoan Oracle
-        console.log("2. Deploying DeLoan Oracle...");
+        // 2. Deploy DeLoanOracle dengan parameter price feed
+        console.log("2️⃣ Deploying DeLoanOracle...");
         deloan = new DeLoanOracle(address(ethPriceFeed));
-        console.log("   DeLoan Oracle:", address(deloan));
+        console.log("   → DeLoanOracle @", address(deloan));
 
         // 3. Fund contract dengan 10 ETH
-        console.log("3. Funding contract...");
+        console.log("3️⃣ Funding DeLoanOracle with 10 ETH...");
         deloan.fundContract{value: 10 ether}();
-        console.log("   Funded with 10 ETH");
+        console.log("   ✅ Funded");
 
-        // 4. Test oracle functionality
-        console.log("4. Testing...");
-        uint256 ethPrice = deloan.getETHPriceUSD();
-        console.log("   ETH Price:", ethPrice / 1e18, "USD");
-        console.log("   Contract Balance:", deloan.getContractBalance() / 1e18, "ETH");
+        // 4. Verifikasi price & balance
+        uint256 ethPriceUSD = deloan.getETHPriceUSD();
+        console.log("4️⃣ ETH Price from Oracle:", ethPriceUSD / 1e18, "USD");
+        uint256 balance = deloan.getContractBalance();
+        console.log("   Contract Balance:", balance / 1e18, "ETH");
 
         vm.stopBroadcast();
 
-        // Summary
+        // 5. Deployment summary
         console.log("\n=== DEPLOYMENT SUMMARY ===");
-        console.log("DeLoan Oracle:", address(deloan));
-        console.log("ETH Price Feed:", address(ethPriceFeed));
-        console.log("Owner:", deloan.owner());
-        console.log("ETH Price: $", ethPrice / 1e18);
+        console.log("DeLoanOracle: ", address(deloan));
+        console.log("MockPriceFeed: ", address(ethPriceFeed));
+        console.log("Owner:         ", deloan.owner());
+        console.log("ETH Price 💰:   $", ethPriceUSD / 1e18);
         console.log("============================");
 
-        // Frontend config
         console.log("\n=== FRONTEND CONFIG ===");
         console.log("NEXT_PUBLIC_DELOAN_CONTRACT_ADDRESS=", address(deloan));
         console.log("NEXT_PUBLIC_ETH_PRICE_FEED_ADDRESS=", address(ethPriceFeed));
-        console.log("========================");
+        console.log("============================");
     }
 }
