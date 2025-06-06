@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useState } from "react";
 
 interface Loan {
@@ -13,7 +14,7 @@ interface Loan {
   status: string;
 }
 
-export default function Dashboard() {
+export default function BankDashboard() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/loan");
+      const res = await fetch("http://localhost:5000/loan");
       if (!res.ok) throw new Error("Failed to fetch loans");
       const data: Loan[] = await res.json();
       setLoans(data);
@@ -34,9 +35,9 @@ export default function Dashboard() {
 
   async function approveLoan(id: string) {
     try {
-      const res = await fetch(`/api/loan/${id}/approve`, {
-        method: "PATCH",
-      });
+     const res = await fetch(`http://localhost:5000/loan/${id}/approve`, {
+    method: "PATCH",
+    });
       if (!res.ok) {
         const errorData = await res.json();
         alert("Error: " + (errorData.error || "Approve failed"));

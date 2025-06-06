@@ -1,7 +1,8 @@
+'use client';
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-export default function PaymentForm() {
+export default function Pay() {
   const router = useRouter();
   const { username } = router.query;
 
