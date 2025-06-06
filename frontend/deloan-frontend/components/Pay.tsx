@@ -1,11 +1,16 @@
 'use client';
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function Pay() {
-  const router = useRouter();
-  const { username } = router.query;
-
+  const params = useParams();
+  const searchParams = useSearchParams();
+  
+  // Get username from URL params or search params, or use input
+  const urlUsername = params?.username || searchParams?.get('username');
+  
+  const [username, setUsername] = useState(urlUsername || "");
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +30,7 @@ export default function Pay() {
       setError("Amount harus lebih dari 0");
       return;
     }
+
     try {
       const res = await fetch(`http://localhost:5000/loan/pay/${username}`, {
         method: "PATCH",
@@ -47,11 +53,30 @@ export default function Pay() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
-      <h1>Bayar Cicilan untuk: {username}</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Jumlah Cicilan:
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+      <h1 className="text-2xl font-bold text-white mb-6">
+        Bayar Cicilan Pinjaman
+      </h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-white/80 mb-2">
+            Username Peminjam:
+          </label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+            placeholder="Masukkan username peminjam"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white/80 mb-2">
+            Jumlah Cicilan:
+          </label>
           <input
             type="number"
             value={amount}
@@ -59,16 +84,30 @@ export default function Pay() {
             min="1"
             step="0.01"
             required
-            style={{ marginLeft: 10 }}
+            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+            placeholder="Masukkan jumlah cicilan"
           />
-        </label>
-        <br />
-        <button type="submit" style={{ marginTop: 10 }}>
-          Bayar
+        </div>
+        
+        <button 
+          type="submit" 
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+        >
+          Bayar Cicilan
         </button>
       </form>
-      {message && <p style={{ color: "green", marginTop: 10 }}>{message}</p>}
-      {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
+
+      {message && (
+        <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+          <p className="text-green-400">{message}</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
     </div>
   );
 }

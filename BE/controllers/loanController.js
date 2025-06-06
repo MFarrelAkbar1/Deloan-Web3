@@ -1,4 +1,5 @@
 const Loan = require("../models/LoanRequest");
+const contract = require("../utils/blockchain");
 
 // Ambil semua pinjaman
 exports.getAllLoans = async (req, res) => {
@@ -18,6 +19,16 @@ exports.approveLoan = async (req, res) => {
 
     loan.status = "transferred";
     await loan.save();
+
+    const tx = await contract.registerLoan(
+      ethers.id(loan.loanId),
+      loan.borrowerWallet,
+      "0x0000000000000000000000000000000000000000", // dummy collateral (bisa NFT nanti)
+      1, // tokenId (dummy)
+      Math.floor(Date.now() / 1000) + loan.durationDays * 86400 // deadline
+    );
+    await tx.wait(); 
+    console.log(`Transaction successful: ${tx.hash}`);
 
     res.json({ message: "Loan approved and marked as transferred", loan });
   } catch (err) {

@@ -2,57 +2,48 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {DeLoanOracle} from "../src/DeLoanOracle.sol";
-import {MockPriceFeed} from "../src/MockPriceFeed.sol";
+import {DeLoanSimple} from "../src/DeLoanSimple.sol";
 
 contract DeploySimpleScript is Script {
-    DeLoanOracle public deloan;
-    MockPriceFeed public ethPriceFeed;
+    DeLoanSimple public deloan;
 
-    function run() external {
-        vm.startBroadcast();
+    function setUp() public {}
 
-        console.log("=== DEPLOYING DELOAN ORACLE ===");
+    function run() public {
+        // Ambil private key dari environment variable
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        
+        vm.startBroadcast(deployerPrivateKey);
 
-        // 1. Deploy mock price feed (ETH/USD) dengan decimals = 8
-        console.log("1️⃣ Deploying Mock ETH/USD Price Feed...");
-        ethPriceFeed = new MockPriceFeed(
-            8,
-            "ETH/USD",
-            1,
-            2000 * 10 ** 8  // $2000 → 2000 * 1e8
-        );
-        console.log("   → Price Feed @", address(ethPriceFeed));
+        console.log("=== DEPLOYING DELOAN SIMPLE ===");
+        console.log("Deployer address:", vm.addr(deployerPrivateKey));
+        console.log("Network Chain ID:", block.chainid);
 
-        // 2. Deploy DeLoanOracle dengan parameter price feed
-        console.log("2️⃣ Deploying DeLoanOracle...");
-        deloan = new DeLoanOracle(address(ethPriceFeed));
-        console.log("   → DeLoanOracle @", address(deloan));
-
-        // 3. Fund contract dengan 10 ETH
-        console.log("3️⃣ Funding DeLoanOracle with 10 ETH...");
-        deloan.fundContract{value: 10 ether}();
-        console.log("   ✅ Funded");
-
-        // 4. Verifikasi price & balance
-        uint256 ethPriceUSD = deloan.getETHPriceUSD();
-        console.log("4️⃣ ETH Price from Oracle:", ethPriceUSD / 1e18, "USD");
-        uint256 balance = deloan.getContractBalance();
-        console.log("   Contract Balance:", balance / 1e18, "ETH");
+        // Deploy DeLoan Simple contract
+        deloan = new DeLoanSimple();
+        
+        console.log("DeLoan Simple deployed to:", address(deloan));
+        console.log("Admin:", deloan.admin());
 
         vm.stopBroadcast();
 
-        // 5. Deployment summary
-        console.log("\n=== DEPLOYMENT SUMMARY ===");
-        console.log("DeLoanOracle: ", address(deloan));
-        console.log("MockPriceFeed: ", address(ethPriceFeed));
-        console.log("Owner:         ", deloan.owner());
-        console.log("ETH Price 💰:   $", ethPriceUSD / 1e18);
-        console.log("============================");
+        // Test basic read functions
+        console.log("\n=== TESTING BASIC FUNCTIONS ===");
+        console.log("Admin address:", deloan.admin());
 
-        console.log("\n=== FRONTEND CONFIG ===");
-        console.log("NEXT_PUBLIC_DELOAN_CONTRACT_ADDRESS=", address(deloan));
-        console.log("NEXT_PUBLIC_ETH_PRICE_FEED_ADDRESS=", address(ethPriceFeed));
-        console.log("============================");
+        // Summary
+        console.log("\n=== DEPLOYMENT SUMMARY ===");
+        console.log("DeLoan Simple Contract:", address(deloan));
+        console.log("Admin Address:", deloan.admin());
+        console.log("Network Chain ID:", block.chainid);
+        console.log("=========================");
+        
+        console.log("\n=== UPDATE .ENV FILE ===");
+        console.log("DELOAN_SIMPLE_CONTRACT_ADDRESS=", address(deloan));
+        console.log("=====================");
+        
+        console.log("\n=== UNTUK FRONTEND CONFIG ===");
+        console.log("export const DELOAN_SIMPLE_CONTRACT_ADDRESS = \"", address(deloan), "\" as const;");
+        console.log("====================");
     }
 }

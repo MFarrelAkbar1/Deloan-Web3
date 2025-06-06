@@ -23,4 +23,9 @@ app.use("/loan", loanRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Bank backend running on port ${PORT}`);
+  console.log(`📡 CORS enabled for: http://localhost:3000`);
 });
+
+console.log("💡 To start other services:");
+console.log("   Event Listener: npm run listener");
+console.log("   Oracle Service: npm run oracle");

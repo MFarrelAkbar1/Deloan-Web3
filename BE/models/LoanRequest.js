@@ -14,6 +14,9 @@ const loanSchema = new mongoose.Schema({
     enum: ["pending", "approved", "transferred", "repaid", "defaulted"],
     default: "pending",
   },
+}
+, {
+  timestamps: true,
 });
 
 
