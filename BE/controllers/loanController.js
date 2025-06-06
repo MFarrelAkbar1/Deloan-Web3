@@ -28,15 +28,16 @@ exports.approveLoan = async (req, res) => {
 // Buat pinjaman baru, data dari on-chain listener
 exports.createLoan = async (req, res) => {
   try {
-    const { loanId, borrowerWallet, amount, reason, durationDays, bankAccount } = req.body;
+    const { loanId, borrowerWallet, amount, reason, durationDays, bankAccount,username } = req.body;
 
     // Validasi input
-    if (!loanId || !borrowerWallet || !amount || amount <= 0 || !durationDays) {
+    if (!loanId || !borrowerWallet || !username || amount <= 0 || !durationDays || !amount ) {
       return res.status(400).json({ error: "Data pinjaman tidak lengkap atau tidak valid" });
     }
 
     const newLoan = new Loan({
       loanId,
+      username,
       borrowerWallet,
       amount,
       remainingAmount: amount,  // Set sisa pinjaman awal sama dengan amount
@@ -56,25 +57,22 @@ exports.createLoan = async (req, res) => {
 // Proses pembayaran cicilan pinjaman
 exports.payLoan = async (req, res) => {
   try {
+    const { username } = req.params; // ambil username dari URL
     const { amount } = req.body;
 
-    // Validasi cicilan
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Cicilan harus lebih dari 0" });
     }
 
-    const loan = await Loan.findById(req.params.id);
-    if (!loan) return res.status(404).json({ error: "Loan not found" });
+    // Cari pinjaman aktif berdasarkan username
+    const loan = await Loan.findOne({ username, status: "transferred" });
 
-    // Pastikan pinjaman sudah ditransfer (aktif)
-    if (loan.status !== "transferred") {
-      return res.status(400).json({ error: "Loan is not active" });
+    if (!loan) {
+      return res.status(404).json({ error: "Loan not found or not active" });
     }
 
-    // Kurangi sisa pinjaman, jangan sampai negatif
+    // Kurangi cicilan
     loan.remainingAmount = Math.max(loan.remainingAmount - amount, 0);
-
-    // Jika lunas, ubah status
     if (loan.remainingAmount === 0) {
       loan.status = "repaid";
     }
@@ -90,3 +88,4 @@ exports.payLoan = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+

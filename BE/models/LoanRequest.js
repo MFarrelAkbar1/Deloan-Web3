@@ -8,6 +8,7 @@ const loanSchema = new mongoose.Schema({
   reason: String,
   durationDays: Number,
   bankAccount: String,
+  username: String,
   status: {
     type: String,
     enum: ["pending", "approved", "transferred", "repaid", "defaulted"],
