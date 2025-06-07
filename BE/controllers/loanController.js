@@ -35,28 +35,49 @@ exports.approveLoan = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 exports.rejectLoan = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    console.log(`🔍 Attempting to reject loan with ID: ${id}`);
+    
+    // Cari loan berdasarkan ID
     const loan = await Loan.findById(id);
-
+    
     if (!loan) {
+      console.log(`❌ Loan not found with ID: ${id}`);
       return res.status(404).json({ error: "Loan not found" });
     }
-
+    
+    console.log(`📋 Found loan: ${loan.loanId}, current status: ${loan.status}`);
+    
+    // Validasi status loan
     if (loan.status !== "pending") {
-      return res.status(400).json({ error: "Only pending loans can be rejected" });
+      console.log(`⚠️ Cannot reject loan. Current status: ${loan.status}`);
+      return res.status(400).json({ 
+        error: `Only pending loans can be rejected. Current status: ${loan.status}` 
+      });
     }
-
+    
+    // Update status ke rejected
     loan.status = "rejected";
     await loan.save();
-
-    res.json({ message: "Loan rejected successfully", status: loan.status });
+    
+    console.log(`✅ Loan ${loan.loanId} successfully rejected`);
+    
+    res.json({ 
+      message: "Loan rejected successfully", 
+      loanId: loan.loanId,
+      status: loan.status,
+      loan: loan
+    });
+    
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`❌ Error rejecting loan:`, err);
+    res.status(500).json({ error: err.message || "Internal server error" });
   }
 };
+
 
 
 // Buat pinjaman baru, data dari on-chain listener
@@ -138,4 +159,5 @@ exports.deleteLoanByUsername = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 

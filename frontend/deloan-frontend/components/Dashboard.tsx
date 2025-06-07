@@ -281,16 +281,19 @@ export default function Dashboard() {
   );
 }
 
-// Komponen Form Pinjaman
+// Komponen Form Pinjaman dengan Toast Notification
 function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
   const [loanAmountIDR, setLoanAmountIDR] = useState('');
   const [duration, setDuration] = useState('30');
   const [reason, setReason] = useState('');
   const [username, setUsername] = useState('');
   const [bankAccount, setBankAccount] = useState('');
+  
+  // State untuk notification
+  const [submitStatus, setSubmitStatus] = useState<'loading' | 'success' | 'error' | null>(null);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const { writeContract, isPending } = useWriteContract();
-
+  const { address } = useAccount();
   const loanAmountNumber = parseIDR(loanAmountIDR);
   const loanAmountETH = loanAmountNumber / CONVERSION_RATES.ETH_TO_IDR;
 
@@ -298,46 +301,94 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault();
     
     if (!username || !loanAmountIDR || !reason) {
-      alert('Mohon lengkapi semua field');
+      setSubmitStatus('error');
+      setStatusMessage('Mohon lengkapi semua field');
+      setTimeout(() => setSubmitStatus(null), 3000);
       return;
     }
 
-    if (loanAmountNumber < 10000 as any) {
-      alert('Masukan angka');
+    if (loanAmountNumber < 10000) {
+      setSubmitStatus('error');
+      setStatusMessage('Masukan angka lebih dari 10.000');
+      setTimeout(() => setSubmitStatus(null), 3000);
       return;
     }
+
+    // Set loading state
+    setSubmitStatus('loading');
+    setStatusMessage('Sedang mengajukan pinjaman...');
 
     try {
-      writeContract({
-        address: DELOAN_CONTRACT_ADDRESS,
-        abi: DELOAN_SIMPLE_ABI,
-        functionName: 'applyLoan',
-        args: [
-          parseEther(loanAmountNumber.toString()), // Amount in wei (untuk demo)
-          username,
+      const response = await fetch('http://localhost:5000/loan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          loanId: Date.now(),
+          borrowerWallet: address,
+          amount: loanAmountNumber,
+          remainingAmount: loanAmountNumber,
           reason,
-          BigInt(parseInt(duration)),
-          bankAccount || ''
-        ],
+          durationDays: parseInt(duration),
+          bankAccount,
+          username,
+          status: 'pending',
+        }),
       });
 
-      // Reset form setelah submit
-      setTimeout(() => {
+      if (response.ok) {
+        // Success state
+        setSubmitStatus('success');
+        setStatusMessage('Pinjaman berhasil diajukan! Data akan muncul di dashboard.');
+        
+        // Reset form
         setLoanAmountIDR('');
         setUsername('');
         setReason('');
         setBankAccount('');
-        onSuccess();
-      }, 3000);
+        
+        // Refresh data dan clear notification
+        setTimeout(() => {
+          onSuccess(); // Refresh loan data
+          setSubmitStatus(null);
+        }, 2000);
+        
+      } else {
+        const errorData = await response.json();
+        setSubmitStatus('error');
+        setStatusMessage(errorData.error || 'Gagal menyimpan ke database');
+        setTimeout(() => setSubmitStatus(null), 5000);
+      }
 
     } catch (err) {
       console.error('Error:', err);
-      alert('Gagal mengajukan pinjaman');
+      setSubmitStatus('error');
+      setStatusMessage('Gagal mengajukan pinjaman. Periksa koneksi internet.');
+      setTimeout(() => setSubmitStatus(null), 5000);
     }
   };
 
   return (
     <div className="max-w-2xl">
+      {/* Toast Notification */}
+      {submitStatus && (
+        <div className={`mb-4 p-4 rounded-lg border transition-all duration-300 ${
+          submitStatus === 'loading' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+          submitStatus === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+          'bg-red-500/10 border-red-500/30 text-red-400'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {submitStatus === 'loading' && (
+              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            )}
+            {submitStatus === 'success' && <span>✅</span>}
+            {submitStatus === 'error' && <span>❌</span>}
+            <span>{statusMessage}</span>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-white/80 mb-2">
@@ -350,6 +401,7 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
             placeholder="Masukkan username Anda"
             required
+            disabled={submitStatus === 'loading'}
           />
         </div>
 
@@ -367,6 +419,7 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
             placeholder="1.000.000"
             required
+            disabled={submitStatus === 'loading'}
           />
           {loanAmountIDR && (
             <p className="text-xs text-white/60 mt-1">
@@ -386,6 +439,7 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
             placeholder="Modal usaha, biaya pendidikan, dll."
             rows={3}
             required
+            disabled={submitStatus === 'loading'}
           />
         </div>
 
@@ -399,6 +453,7 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
             onChange={(e) => setBankAccount(e.target.value)}
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
             placeholder="1234567890"
+            disabled={submitStatus === 'loading'}
           />
         </div>
 
@@ -406,17 +461,18 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
           <label className="block text-sm font-medium text-white/80 mb-2">
             Jangka Waktu (Hari)
           </label>
-          <select
+            <select
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-          >
-            <option value="7">7 Hari</option>
-            <option value="14">14 Hari</option>
-            <option value="30">30 Hari</option>
-            <option value="60">60 Hari</option>
-            <option value="90">90 Hari</option>
-          </select>
+            disabled={submitStatus === 'loading'}
+            >
+            <option value="7" className="text-black">7 Hari</option>
+            <option value="14" className="text-black">14 Hari</option>
+            <option value="30" className="text-black">30 Hari</option>
+            <option value="60" className="text-black">60 Hari</option>
+            <option value="90" className="text-black">90 Hari</option>
+            </select>
         </div>
 
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -431,10 +487,21 @@ function LoanFormIDR({ onSuccess }: { onSuccess: () => void }) {
 
         <button
           type="submit"
-          disabled={isPending || !loanAmountIDR || !username}
-          className="w-full bg-gradient-to-r from-blue-500 to-green-600 hover:from-blue-600 hover:to-green-700 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+          disabled={submitStatus === 'loading' || !loanAmountIDR || !username}
+          className={`w-full font-semibold py-3 px-6 rounded-lg transition-all ${
+            submitStatus === 'loading' || !loanAmountIDR || !username
+              ? 'bg-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-blue-500 to-green-600 hover:from-blue-600 hover:to-green-700'
+          } text-white`}
         >
-          {isPending ? 'Mengajukan Pinjaman...' : 'Ajukan Pinjaman'}
+          {submitStatus === 'loading' ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Mengajukan Pinjaman...</span>
+            </div>
+          ) : (
+            'Ajukan Pinjaman'
+          )}
         </button>
       </form>
     </div>

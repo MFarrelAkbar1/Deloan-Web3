@@ -11,13 +11,18 @@ const loanSchema = new mongoose.Schema({
   username: String,
   status: {
     type: String,
-    enum: ["pending", "approved", "transferred", "repaid", "defaulted"],
+    enum: [
+      "pending", 
+      "approved", 
+      "rejected",     // ✅ TAMBAHKAN INI
+      "transferred", 
+      "repaid", 
+      "defaulted"
+    ],
     default: "pending",
   },
-}
-, {
+}, {
   timestamps: true,
 });
-
 
 module.exports = mongoose.model("LoanRequest", loanSchema);
